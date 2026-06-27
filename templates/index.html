@@ -1,0 +1,464 @@
+
+<style>
+  :root {
+    --void: #080810;
+    --stone: #0f0f1a;
+    --slate: #161625;
+    --border: rgba(120,110,180,0.18);
+    --border-bright: rgba(160,145,220,0.35);
+    --gold: #c9a86c;
+    --gold-dim: #7a5f35;
+    --silver: #9ba8c0;
+    --teal: #4a9e8a;
+    --teal-dim: #1f4a42;
+    --crimson: #8b3535;
+    --crimson-bright: #c44a4a;
+    --blue-text: #7eb8e8;
+    --muted: #5a5878;
+    --soft: #bbb8d4;
+    --font-serif: Georgia, 'Times New Roman', serif;
+    --font-mono: 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--void); color: var(--soft); font-family: var(--font-mono); }
+
+  .app {
+    display: grid;
+    grid-template-columns: 270px 1fr 260px;
+    height: 600px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .panel { display: flex; flex-direction: column; background: var(--stone); border-right: 1px solid var(--border); overflow: hidden; }
+  .panel:last-child { border-right: none; }
+
+  .panel-header {
+    padding: 10px 14px;
+    background: var(--void);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-serif);
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .panel-header .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--gold); opacity: 0.6; }
+
+  .tab-row { display: flex; background: var(--void); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .tab-btn {
+    flex: 1; padding: 9px; background: none; border: none;
+    border-bottom: 2px solid transparent;
+    font-family: var(--font-serif); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 2px;
+    color: var(--muted); cursor: pointer; transition: 0.2s;
+  }
+  .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); background: rgba(201,168,108,0.05); }
+  .tab-btn:hover:not(.active) { color: var(--soft); }
+
+  .circle-row { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--slate); }
+  .circle-btn {
+    flex: 1; padding: 8px 0; background: none; border: none;
+    border-right: 1px solid var(--border);
+    font-family: var(--font-serif); font-size: 11px;
+    color: var(--muted); cursor: pointer; transition: 0.2s;
+    font-style: italic;
+  }
+  .circle-btn:last-child { border-right: none; }
+  .circle-btn.active { color: var(--gold); background: rgba(201,168,108,0.08); }
+
+  .spell-list { flex: 1; overflow-y: auto; padding: 6px; min-height: 0; }
+  .spell-card {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 10px; margin-bottom: 4px;
+    background: var(--void); border: 1px solid var(--border);
+    border-left: 2px solid var(--teal-dim);
+    cursor: pointer; transition: 0.15s;
+  }
+  .spell-card:hover { border-color: var(--border-bright); border-left-color: var(--teal); background: var(--slate); }
+  .spell-card.locked { opacity: 0.3; cursor: default; border-left-color: var(--border); }
+  .spell-card.locked:hover { border-color: var(--border); background: var(--void); }
+  .spell-word { font-size: 9px; color: var(--muted); letter-spacing: 1px; }
+  .spell-name { font-size: 12px; font-weight: 500; color: var(--soft); font-family: var(--font-serif); }
+  .spell-cost { font-size: 9px; color: var(--teal); background: rgba(74,158,138,0.12); padding: 2px 6px; border-radius: 2px; }
+
+  .alchemy-header { padding: 8px 12px 6px; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold-dim); background: var(--void); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .alchemy-list { flex: 0 0 auto; max-height: 120px; overflow-y: auto; padding: 6px; background: rgba(0,0,0,0.2); }
+  .alchemy-card {
+    padding: 7px 10px; margin-bottom: 4px;
+    background: rgba(141,84,36,0.07); border: 1px solid rgba(141,84,36,0.2);
+    border-left: 2px solid var(--gold-dim);
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; transition: 0.15s;
+  }
+  .alchemy-card:hover { border-left-color: var(--gold); background: rgba(201,168,108,0.1); }
+
+  .footer-btns { border-top: 1px solid var(--border); padding: 8px; flex-shrink: 0; display: flex; flex-direction: column; gap: 5px; }
+  .footer-btn {
+    width: 100%; padding: 7px; background: var(--void); border: 1px solid var(--border);
+    color: var(--muted); font-family: var(--font-serif); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.2s;
+  }
+  .footer-btn:hover { border-color: var(--border-bright); color: var(--soft); }
+  .footer-btn.gold { border-color: var(--gold-dim); color: var(--gold); }
+  .footer-btn.gold:hover { border-color: var(--gold); background: rgba(201,168,108,0.08); }
+  .footer-btn-row { display: flex; gap: 5px; }
+
+  .chronicle {
+    flex: 1; overflow-y: auto; padding: 28px 32px;
+    background: linear-gradient(to bottom, #080810 0%, #0c0c18 100%);
+    min-height: 0;
+  }
+  .entry { margin-bottom: 22px; line-height: 1.85; animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .entry-assistant { color: var(--blue-text); font-size: 13.5px; }
+  .entry-warden { color: var(--gold); font-size: 13px; }
+  .entry-system { color: var(--teal); font-size: 11px; font-style: italic; opacity: 0.8; }
+  .entry p { margin-bottom: 10px; }
+  .entry strong { color: var(--gold); }
+  .entry em { color: var(--soft); }
+  .entry-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; opacity: 0.5; }
+
+  .input-zone {
+    border-top: 1px solid var(--border);
+    background: var(--void);
+    padding: 12px 14px;
+    flex-shrink: 0;
+  }
+  .input-row { display: flex; gap: 8px; }
+  .input-area {
+    flex: 1; background: var(--slate); border: 1px solid var(--border);
+    color: var(--soft); font-family: var(--font-mono); font-size: 12px;
+    padding: 9px 12px; resize: none; outline: none; height: 52px;
+    transition: border-color 0.2s;
+  }
+  .input-area:focus { border-color: var(--border-bright); }
+  .submit-btn {
+    padding: 0 20px; background: rgba(201,168,108,0.08);
+    border: 1px solid var(--gold-dim);
+    color: var(--gold); font-family: var(--font-serif);
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; transition: 0.2s; white-space: nowrap;
+  }
+  .submit-btn:hover { background: rgba(201,168,108,0.15); border-color: var(--gold); }
+
+  .right-panel { overflow-y: auto; }
+  .status-section { padding: 12px 14px; border-bottom: 1px solid var(--border); }
+  .status-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+
+  .location-box {
+    background: var(--slate); border: 1px solid var(--border);
+    padding: 8px 12px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .location-region { font-family: var(--font-serif); font-size: 13px; color: var(--soft); }
+  .location-site { font-size: 11px; color: var(--muted); }
+
+  .vitality-row { display: flex; gap: 8px; }
+  .vital-box {
+    flex: 1; background: var(--slate); border: 1px solid var(--border);
+    padding: 8px 10px; text-align: center;
+  }
+  .vital-label { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 3px; }
+  .vital-val { font-size: 16px; font-weight: 500; font-family: var(--font-serif); }
+  .vital-hp { color: var(--crimson-bright); border-color: rgba(139,53,53,0.3); }
+  .vital-hp .vital-val { color: var(--crimson-bright); }
+  .vital-fracture { color: var(--teal); border-color: rgba(74,158,138,0.25); }
+  .vital-fracture .vital-val { color: var(--teal); }
+
+  .hp-bar-wrap { margin-top: 4px; background: rgba(139,53,53,0.15); height: 3px; border-radius: 1px; overflow: hidden; }
+  .hp-bar { height: 100%; background: var(--crimson-bright); transition: width 0.4s; }
+
+  .fracture-pips { display: flex; gap: 3px; margin-top: 4px; justify-content: center; }
+  .pip { width: 12px; height: 5px; border-radius: 1px; background: var(--border); transition: 0.3s; }
+  .pip.filled { background: var(--teal); }
+
+  .wealth-row { display: flex; gap: 6px; }
+  .wealth-box {
+    flex: 1; background: var(--slate); border: 1px solid var(--border);
+    padding: 6px 8px; text-align: center;
+  }
+  .wealth-label { font-size: 8px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+  .wealth-val { font-size: 15px; font-family: var(--font-serif); }
+  .w-gold .wealth-label { color: var(--gold-dim); } .w-gold .wealth-val { color: var(--gold); }
+  .w-silver .wealth-label { color: #667; } .w-silver .wealth-val { color: var(--silver); }
+  .w-copper .wealth-label { color: #553; } .w-copper .wealth-val { color: #c87941; }
+
+  .faction-list { padding: 6px; }
+  .faction-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 10px; margin-bottom: 3px;
+    background: var(--void); border: 1px solid var(--border);
+    border-left: 2px solid transparent; transition: 0.2s;
+  }
+  .faction-row:hover { border-color: var(--border-bright); }
+  .faction-name { font-size: 11px; color: var(--soft); letter-spacing: 0.5px; }
+  .faction-val { font-size: 12px; font-weight: 500; color: var(--muted); }
+
+  .vow-box {
+    margin: 0 14px 14px;
+    background: var(--void); border: 1px solid var(--border);
+    border-left: 2px solid var(--muted); padding: 10px 12px;
+  }
+  .vow-title { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
+  .vow-obj { font-size: 12px; color: var(--soft); font-family: var(--font-serif); margin-bottom: 4px; }
+
+  .inv-list { padding: 6px; }
+  .inv-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 10px; margin-bottom: 3px;
+    background: var(--void); border: 1px solid var(--border);
+    border-left: 2px solid var(--gold-dim);
+    cursor: pointer; transition: 0.15s; font-size: 11px;
+  }
+  .inv-row:hover { border-left-color: var(--gold); background: var(--slate); }
+  .inv-name { color: var(--soft); }
+  .inv-count { color: var(--gold); font-size: 10px; }
+
+  .equip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 6px; }
+  .equip-slot { background: var(--void); border: 1px solid var(--border); padding: 5px 8px; }
+  .equip-label { font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+  .equip-val { font-size: 10px; color: var(--soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .equip-empty { color: var(--muted); font-style: italic; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+</style>
+
+<div class="app">
+
+  <div class="panel">
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('grimoire',this)">Grimoire</button>
+      <button class="tab-btn" onclick="switchTab('bestiary',this)">Bestiary</button>
+    </div>
+    <div id="pane-grimoire" style="display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0;">
+      <div class="circle-row">
+        <button class="circle-btn active" onclick="showCircle(1,this)">I</button>
+        <button class="circle-btn" onclick="showCircle(2,this)">II</button>
+        <button class="circle-btn" onclick="showCircle(3,this)">III</button>
+        <button class="circle-btn" onclick="showCircle(4,this)">IV</button>
+      </div>
+      <div class="spell-list" id="spell-list"></div>
+      <div class="alchemy-header">&#9670; Alchemical Circle</div>
+      <div class="alchemy-list" id="alchemy-list"></div>
+    </div>
+    <div id="pane-bestiary" style="display:none;flex:1;overflow-y:auto;padding:6px;"></div>
+    <div class="footer-btns">
+      <div class="footer-btn-row">
+        <button class="footer-btn" id="tts-btn" onclick="toggleTTS()" style="flex:1;">Narration: Off</button>
+        <button class="footer-btn" id="music-btn" onclick="toggleMusic()" style="flex:1;">Music: Off</button>
+      </div>
+      <button class="footer-btn gold" onclick="alert('Generating scene image...')">&#9672; Visualize</button>
+      <div class="footer-btn-row">
+        <button class="footer-btn gold" style="flex:1;" onclick="alert('Saving...')">&#8659; Save</button>
+        <button class="footer-btn gold" style="flex:1;" onclick="alert('Loading...')">&#8657; Load</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel center-panel" style="border-right:1px solid var(--border);">
+    <div class="panel-header">
+      <span class="dot"></span>
+      The Chronicle
+      <span style="margin-left:auto;font-size:9px;color:var(--muted);letter-spacing:1px;">turn 14</span>
+    </div>
+    <div class="chronicle" id="chronicle">
+      <div class="entry entry-system">— Aeloria. The Docks. The air smells of salt and iron. —</div>
+      <div class="entry entry-assistant">
+        <p>The lanterns along the Docks sway in the harbour wind, casting long amber shadows across wet cobblestone. Gulls cry somewhere above the mist. A merchant's cart has overturned ahead, spilling grain across the road—three men argue in low, urgent voices nearby.</p>
+        <p>Your coat is damp. The letter from Lyssa sits heavy against your chest. <strong>The Leyline hums faintly beneath your feet.</strong></p>
+      </div>
+      <hr class="entry-divider">
+      <div class="entry entry-warden"><strong>Warden:</strong> I approach the arguing men and listen to what they say.</div>
+      <div class="entry entry-assistant">
+        <p>You drift closer, keeping your hood drawn. One of the men—broad-shouldered, a dockworker by the look of his hands—jabs a finger into the chest of another.</p>
+        <p><em>"Three crates gone. Not spilled—gone. Someone moved them before the cart turned."</em></p>
+        <p>The third man, quieter, glances at you once. His eyes don't linger.</p>
+      </div>
+      <hr class="entry-divider">
+      <div class="entry entry-system">[ Fracture reset. The Leyline is still. ]</div>
+    </div>
+    <div class="input-zone">
+      <div class="input-row">
+        <textarea class="input-area" id="action-input" placeholder="What do you do?"></textarea>
+        <button class="submit-btn" onclick="submitAction()">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel right-panel">
+    <div class="panel-header"><span class="dot"></span>Status</div>
+    <div class="status-section">
+      <div class="status-label">Location</div>
+      <div class="location-box">
+        <span class="location-region">Aeloria</span>
+        <span class="location-site">Docks</span>
+      </div>
+    </div>
+    <div class="status-section">
+      <div class="status-label">Vitality</div>
+      <div class="vitality-row">
+        <div class="vital-box vital-hp">
+          <div class="vital-label">Health</div>
+          <div class="vital-val">42/50</div>
+          <div class="hp-bar-wrap"><div class="hp-bar" style="width:84%"></div></div>
+        </div>
+        <div class="vital-box vital-fracture">
+          <div class="vital-label">Fracture</div>
+          <div class="vital-val">1/4</div>
+          <div class="fracture-pips">
+            <div class="pip filled"></div>
+            <div class="pip"></div>
+            <div class="pip"></div>
+            <div class="pip"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="status-section">
+      <div class="status-label">Wealth</div>
+      <div class="wealth-row">
+        <div class="wealth-box w-gold"><div class="wealth-label">Gold</div><div class="wealth-val">3</div></div>
+        <div class="wealth-box w-silver"><div class="wealth-label">Silver</div><div class="wealth-val">15</div></div>
+        <div class="wealth-box w-copper"><div class="wealth-label">Copper</div><div class="wealth-val">50</div></div>
+      </div>
+    </div>
+    <div class="panel-header" style="font-size:9px;padding:7px 14px;">&#9670; Equipment</div>
+    <div class="equip-grid">
+      <div class="equip-slot"><div class="equip-label">Main Hand</div><div class="equip-val">Iron Shortsword</div></div>
+      <div class="equip-slot"><div class="equip-label">Off Hand</div><div class="equip-val equip-empty">(Empty)</div></div>
+      <div class="equip-slot"><div class="equip-label">Chest</div><div class="equip-val equip-empty">(Empty)</div></div>
+      <div class="equip-slot"><div class="equip-label">Helm</div><div class="equip-val equip-empty">(Empty)</div></div>
+      <div class="equip-slot"><div class="equip-label">Hands</div><div class="equip-val equip-empty">(Empty)</div></div>
+      <div class="equip-slot"><div class="equip-label">Boots</div><div class="equip-val equip-empty">(Empty)</div></div>
+    </div>
+    <div class="panel-header" style="font-size:9px;padding:7px 14px;">&#9670; Inventory</div>
+    <div class="inv-list">
+      <div class="inv-row"><span class="inv-name">Iron Shortsword</span><span class="inv-count">×1</span></div>
+      <div class="inv-row"><span class="inv-name">Letter from Lyssa</span><span class="inv-count">×1</span></div>
+    </div>
+    <div class="panel-header" style="font-size:9px;padding:7px 14px;">&#9670; Standing</div>
+    <div class="faction-list">
+      <div class="faction-row"><span class="faction-name">Valdris</span><span class="faction-val">0</span></div>
+      <div class="faction-row"><span class="faction-name">Aeloria</span><span class="faction-val">0</span></div>
+      <div class="faction-row"><span class="faction-name">Thornhaven</span><span class="faction-val">0</span></div>
+      <div class="faction-row"><span class="faction-name">Pale Reaches</span><span class="faction-val">0</span></div>
+    </div>
+    <div class="panel-header" style="font-size:9px;padding:7px 14px;">&#9670; The Vow</div>
+    <div class="vow-box">
+      <div class="vow-title">No Oath Sworn</div>
+      <div class="vow-obj" style="color:var(--muted);font-size:11px;font-style:italic;">The spirit is unburdened.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SPELLS = {
+  1:[{name:"Heal",word:"Ad Vita"},{name:"Bright",word:"Ad Luc"},{name:"Spark",word:"Ig Fac"},{name:"Ice Arrow",word:"Frig Tel"},{name:"Protect",word:"Ob Mal"},{name:"Calm",word:"Pac Cor"},{name:"Strength",word:"Vis Max"},{name:"Shock",word:"Ful Min"}],
+  2:[{name:"Cure",word:"San Ven"},{name:"Dispel",word:"Neg Mag"},{name:"Fireball",word:"Jact Ign"},{name:"Frost Strike",word:"Glac Ful"},{name:"Purifying Light",word:"San Luc"},{name:"Lightning",word:"Mag Ful"},{name:"Stone Hammer",word:"Mur Sol"},{name:"Poison",word:"Ven Nex"}],
+  3:[{name:"Speak with Dead",word:"Mor Loq"},{name:"Fog",word:"Neb Occ"},{name:"Stone Skin",word:"Pel Dur"},{name:"Drain",word:"Abs Mag"},{name:"Reflection",word:"Ref Mag"},{name:"Fear",word:"Terr Mens"},{name:"Haste",word:"Vel Max"},{name:"Bind",word:"Vin Nat"}],
+  4:[{name:"Chain Lightning",word:"Ful Cat"},{name:"Blizzard",word:"Temp Frig"},{name:"Earthquake",word:"Terr Mot"},{name:"Flame Blast",word:"Flam Max"},{name:"Divine Light",word:"Luc Div"},{name:"Invisibility",word:"Occ Cor"},{name:"Divide Self",word:"Div Ego"},{name:"Banish",word:"Pel Ext"}]
+};
+const knownSpells = ["Ad Vita","Ad Luc","Ig Fac","Frig Tel","Ob Mal","Pac Cor","Vis Max","Ful Min"];
+const ALCHEMY = [
+  {name:"Healing Salve",ingredients:["Bloodroot","Lavender","Empty Vial"]},
+  {name:"Night's Sight",ingredients:["Wolfsbane","Bloodroot","Empty Vial"]},
+  {name:"Leyline Amplifier",ingredients:["Silverleaf","Nightshade","Empty Vial"]}
+];
+const BESTIARY = [
+  {name:"Ice Voidling",tags:"Void · Elemental",weak:"Fire",immune:"Cold, Iron, Lesser Magic"},
+  {name:"Grave Walker",tags:"Undead · Risen",weak:"Lightning, Stone Weapons",immune:"Cold, Poison, Fear"},
+  {name:"Noble Vampire",tags:"Vampire · Ancient",weak:"Divine Light, Silver, Decapitation",immune:"—"},
+  {name:"Wraith",tags:"Undead · Spirit",weak:"Light, Radiance, Dispel",immune:"Physical, Cold, Poison"},
+  {name:"Stone Sentinel",tags:"Construct · Guardian",weak:"Lightning, Earthquake",immune:"Fire, Ice, Poison"},
+  {name:"Dark Warden",tags:"The Fallen · Void-Touched",weak:"Steel, Spells, Banishment",immune:"—"},
+  {name:"Wolf",tags:"Beast · Pack",weak:"Fire, Poison, Iron",immune:"—"},
+  {name:"Shadow Voidling",tags:"Void · Shadow",weak:"Radiance, Light",immune:"Darkness, Iron, Poison"}
+];
+
+function showCircle(n, btn) {
+  document.querySelectorAll('.circle-btn').forEach((b,i) => b.classList.toggle('active', i+1===n));
+  const list = document.getElementById('spell-list');
+  list.innerHTML = '';
+  SPELLS[n].forEach(s => {
+    const known = knownSpells.includes(s.word);
+    const d = document.createElement('div');
+    d.className = 'spell-card' + (known ? '' : ' locked');
+    d.innerHTML = `<div><div class="spell-word">${s.word}</div><div class="spell-name">${s.name}</div></div><span class="spell-cost">C${n}</span>`;
+    if (known) d.onclick = () => { document.getElementById('action-input').value = `I cast ${s.word} (${s.name}).`; document.getElementById('action-input').focus(); };
+    list.appendChild(d);
+  });
+}
+
+function renderAlchemy() {
+  const list = document.getElementById('alchemy-list');
+  list.innerHTML = '';
+  ALCHEMY.forEach(r => {
+    const d = document.createElement('div');
+    d.className = 'alchemy-card';
+    d.innerHTML = `<span style="font-family:var(--font-serif);font-size:11px;color:var(--soft);">${r.name}</span><span style="font-size:9px;color:var(--muted);">${r.ingredients.join(' + ')}</span>`;
+    list.appendChild(d);
+  });
+}
+
+function renderBestiary() {
+  const pane = document.getElementById('pane-bestiary');
+  pane.innerHTML = '';
+  BESTIARY.forEach(b => {
+    const d = document.createElement('div');
+    d.style.cssText = 'background:var(--void);border:1px solid var(--border);border-left:2px solid var(--crimson);padding:10px 12px;margin-bottom:6px;';
+    d.innerHTML = `<div style="font-family:var(--font-serif);font-size:13px;color:var(--soft);margin-bottom:3px;">${b.name}</div><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">${b.tags}</div><div style="font-size:10px;color:#c44a4a;"><span style="color:var(--muted);">Weak:</span> ${b.weak}</div><div style="font-size:10px;color:var(--teal);"><span style="color:var(--muted);">Immune:</span> ${b.immune}</div>`;
+    pane.appendChild(d);
+  });
+}
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const g = document.getElementById('pane-grimoire');
+  g.style.display = tab==='grimoire' ? 'flex' : 'none';
+  g.style.flexDirection = 'column'; g.style.flex = '1'; g.style.overflow = 'hidden'; g.style.minHeight = '0';
+  document.getElementById('pane-bestiary').style.display = tab==='bestiary' ? 'block' : 'none';
+}
+
+function submitAction() {
+  const ta = document.getElementById('action-input');
+  const val = ta.value.trim();
+  if (!val) return;
+  const chron = document.getElementById('chronicle');
+  const d = document.createElement('div');
+  d.className = 'entry entry-warden';
+  d.innerHTML = `<strong>Warden:</strong> ${val}`;
+  chron.appendChild(d);
+  chron.scrollTop = chron.scrollHeight;
+  ta.value = '';
+  ta.focus();
+}
+
+let ttsOn = false, musicOn = false;
+function toggleTTS() {
+  ttsOn = !ttsOn;
+  const btn = document.getElementById('tts-btn');
+  btn.textContent = ttsOn ? 'Narration: On' : 'Narration: Off';
+  btn.style.borderColor = ttsOn ? 'var(--gold-dim)' : '';
+  btn.style.color = ttsOn ? 'var(--gold)' : '';
+}
+function toggleMusic() {
+  musicOn = !musicOn;
+  const btn = document.getElementById('music-btn');
+  btn.textContent = musicOn ? 'Music: On' : 'Music: Off';
+  btn.style.borderColor = musicOn ? 'var(--gold-dim)' : '';
+  btn.style.color = musicOn ? 'var(--gold)' : '';
+}
+
+showCircle(1, null);
+renderAlchemy();
+renderBestiary();
+</script>
